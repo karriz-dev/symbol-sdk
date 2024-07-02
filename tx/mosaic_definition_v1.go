@@ -1,6 +1,6 @@
 package tx
 
-import "backend/pkg/symbol-sdk/common"
+import "symbol-sdk/common"
 
 type MosaicDefinitionV1 struct {
 	Transaction

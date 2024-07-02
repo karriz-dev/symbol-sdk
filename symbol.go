@@ -1,8 +1,8 @@
 package symbolsdk
 
 import (
-	"backend/pkg/symbol-sdk/tx"
-	"backend/pkg/symbol-sdk/types"
+	"symbol-sdk/tx"
+	"symbol-sdk/types"
 )
 
 type Utils struct {

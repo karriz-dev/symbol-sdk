@@ -1,8 +1,8 @@
 package tx
 
 import (
-	"backend/pkg/symbol-sdk/common"
-	"backend/pkg/symbol-sdk/types"
+	"symbol-sdk/common"
+	"symbol-sdk/types"
 	"testing"
 	"time"
 

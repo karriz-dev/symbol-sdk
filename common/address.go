@@ -1,11 +1,11 @@
 package common
 
 import (
-	"backend/pkg/symbol-sdk/types"
 	"crypto/ed25519"
 	"encoding/base32"
 	"encoding/hex"
 	"strings"
+	"symbol-sdk/types"
 
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"

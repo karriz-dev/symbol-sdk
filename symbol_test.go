@@ -1,7 +1,7 @@
 package symbolsdk
 
 import (
-	"backend/pkg/symbol-sdk/common"
+	"symbol-sdk/common"
 	"testing"
 	"time"
 

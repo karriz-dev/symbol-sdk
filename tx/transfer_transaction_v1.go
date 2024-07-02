@@ -1,9 +1,9 @@
 package tx
 
 import (
-	"backend/pkg/symbol-sdk/common"
-	"backend/pkg/symbol-sdk/types"
 	"crypto/ed25519"
+	"symbol-sdk/common"
+	"symbol-sdk/types"
 )
 
 type TransferTransactionV1 struct {
