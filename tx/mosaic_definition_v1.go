@@ -1,6 +1,6 @@
 package tx
 
-import "symbol-sdk/common"
+import "github.com/karriz-dev/symbol-sdk/common"
 
 type MosaicDefinitionV1 struct {
 	Transaction

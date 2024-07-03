@@ -1,10 +1,10 @@
 package symbolsdk
 
 import (
-	"symbol-sdk/common"
 	"testing"
 	"time"
 
+	"github.com/karriz-dev/symbol-sdk/common"
 	"github.com/stretchr/testify/require"
 )
 

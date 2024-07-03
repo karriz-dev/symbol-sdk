@@ -2,8 +2,9 @@ package tx
 
 import (
 	"crypto/ed25519"
-	"symbol-sdk/common"
-	"symbol-sdk/types"
+
+	"github.com/karriz-dev/symbol-sdk/common"
+	"github.com/karriz-dev/symbol-sdk/types"
 )
 
 type TransferTransactionV1 struct {

@@ -1,11 +1,11 @@
 package tx
 
 import (
-	"symbol-sdk/common"
-	"symbol-sdk/types"
 	"testing"
 	"time"
 
+	"github.com/karriz-dev/symbol-sdk/common"
+	"github.com/karriz-dev/symbol-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 

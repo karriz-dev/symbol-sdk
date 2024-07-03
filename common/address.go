@@ -5,8 +5,8 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"strings"
-	"symbol-sdk/types"
 
+	"github.com/karriz-dev/symbol-sdk/types"
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
 )

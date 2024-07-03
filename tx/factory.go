@@ -1,9 +1,10 @@
 package tx
 
 import (
-	"symbol-sdk/common"
-	"symbol-sdk/types"
 	"time"
+
+	"github.com/karriz-dev/symbol-sdk/common"
+	"github.com/karriz-dev/symbol-sdk/types"
 )
 
 type ITransaction interface {
