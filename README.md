@@ -1,4 +1,8 @@
 # Symbol SDK For Go
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/karriz-dev/symbol-sdk)
+![GitHub Release](https://img.shields.io/github/v/release/karriz-dev/symbol-sdk)
+
+
 ## Installation
 ```bash
 go get github.com/karriz-dev/symbol-sdk
