@@ -44,7 +44,7 @@ func TestTransactionSign(t *testing.T) {
 		TransferTransactionV1()
 
 	err := transferTx.
-		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, symbolFacade.TestNet)).
+		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, symbolFacade.Network)).
 		Mosaics([]common.Mosaic{
 			{
 				MosaicId: 0x72C0212E67A08BCE,

@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/karriz-dev/symbol-sdk/types"
+	"github.com/karriz-dev/symbol-sdk/network"
 	"golang.org/x/crypto/ripemd160"
 	"golang.org/x/crypto/sha3"
 )
@@ -20,10 +20,6 @@ type KeyPair struct {
 	PrivateKey PrivateKey
 	PublicKey  PublicKey
 }
-
-var (
-	DefaultAddress = Address{}
-)
 
 func NewKeyPair() (KeyPair, error) {
 	publicKey, privateKey, err := ed25519.GenerateKey(nil)
@@ -83,7 +79,7 @@ func DecodeAddress(encodedAddress string) (Address, error) {
 	return Address(decodeAddr), nil
 }
 
-func PublicKeyToAddress(publicKey PublicKey, networkType types.NetworkType) Address {
+func PublicKeyToAddress(publicKey PublicKey, network network.Network) Address {
 	// step 1. sha3_256 hash of the publickey
 	sha3Hasher := sha3.New256()
 	sha3Hasher.Write(publicKey[:])
@@ -96,7 +92,7 @@ func PublicKeyToAddress(publicKey PublicKey, networkType types.NetworkType) Addr
 
 	// step 3. add network identifier byte in front of (2)
 	addressWithNetworkId := make([]byte, 1)
-	addressWithNetworkId[0] = byte(networkType)
+	addressWithNetworkId[0] = byte(network.Type)
 	addressWithNetworkId = append(addressWithNetworkId, addressHash...)
 
 	// step 4. sha3_256 for checksum

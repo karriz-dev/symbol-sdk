@@ -26,7 +26,7 @@ func (transactionFactory *TransactionFactory) TransferTransactionV1() TransferTr
 	commonTx := Transaction{
 		size:                            128, // 128 = common tx size
 		version:                         0x01,
-		network:                         transactionFactory.networkType,
+		network:                         transactionFactory.network,
 		txType:                          0x4154, // transfer_transaction_v1
 		fee:                             transactionFactory.maxFee,
 		deadline:                        transactionFactory.deadline,

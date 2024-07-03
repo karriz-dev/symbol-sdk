@@ -1,19 +1,13 @@
 package symbolsdk
 
 import (
+	"github.com/karriz-dev/symbol-sdk/network"
 	"github.com/karriz-dev/symbol-sdk/tx"
-	"github.com/karriz-dev/symbol-sdk/types"
 )
-
-type Utils struct {
-	F func()
-}
 
 type SymbolFacade struct {
 	TransactionFactory tx.TransactionFactory
-
-	MainNet types.NetworkType
-	TestNet types.NetworkType
+	Network            network.Network
 }
 
 // Supported symbol network type
@@ -21,18 +15,17 @@ type SymbolFacade struct {
 //	mainnet: symbol main network (104)
 //	testnet: symbol sai test network (152)
 func NewSymbolFacade(networkType string) *SymbolFacade {
-	var network types.NetworkType
+	var symbolNetwork network.Network
 	switch networkType {
 	case "mainnet":
-		network = types.MAINNET
+		symbolNetwork = network.MAINNET
 	case "testnet":
-		network = types.TESTNET
+		symbolNetwork = network.TESTNET
 	default:
-		network = types.TESTNET
+		symbolNetwork = network.TESTNET
 	}
 	return &SymbolFacade{
-		TransactionFactory: *tx.NewTransactionFactory(network),
-		MainNet:            types.MAINNET,
-		TestNet:            types.TESTNET,
+		TransactionFactory: *tx.NewTransactionFactory(symbolNetwork),
+		Network:            symbolNetwork,
 	}
 }

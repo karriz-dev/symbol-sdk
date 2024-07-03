@@ -5,18 +5,18 @@ import (
 	"time"
 
 	"github.com/karriz-dev/symbol-sdk/common"
-	"github.com/karriz-dev/symbol-sdk/types"
+	"github.com/karriz-dev/symbol-sdk/network"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTransactionFactory(t *testing.T) {
 	// set transaction factory
-	transactionFactory := NewTransactionFactory(types.TESTNET)
+	transactionFactory := NewTransactionFactory(network.TESTNET)
 
 	// create TransferTransactionV1
 	transferTx := transactionFactory.
 		MaxFee(1_000000).
-		Deadline(time.Minute * 10).
+		Deadline(time.Hour * 2).
 		TransferTransactionV1()
 
 	t.Logf("transferTx: %+v", transferTx)
@@ -24,7 +24,7 @@ func TestTransactionFactory(t *testing.T) {
 
 func TestTransactionSerialize(t *testing.T) {
 	// set transaction factory
-	transactionFactory := NewTransactionFactory(types.TESTNET)
+	transactionFactory := NewTransactionFactory(network.TESTNET)
 
 	// alice keyPair
 	aliceKeyPair, err := common.HexToKeyPair("38FB967C5427C6D4CAF9BEFBF8B80B0D139BC55374643F76A13325F852C09DFD")
@@ -38,12 +38,12 @@ func TestTransactionSerialize(t *testing.T) {
 	transferTx := transactionFactory.
 		Signer(aliceKeyPair).
 		MaxFee(1_000000).
-		Deadline(time.Minute * 10).
+		Deadline(time.Hour * 2).
 		TransferTransactionV1()
 
 	// make transfer_transaction_v1 [alice -> bob xym 1]
 	serializedData, err := transferTx.
-		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, types.TESTNET)).
+		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, network.TESTNET)).
 		Mosaics([]common.Mosaic{
 			{
 				MosaicId: 0x72C0212E67A08BCE,
@@ -64,7 +64,7 @@ func TestTransactionSerialize(t *testing.T) {
 
 func TestTransactionSign(t *testing.T) {
 	// set transaction factory
-	transactionFactory := NewTransactionFactory(types.TESTNET)
+	transactionFactory := NewTransactionFactory(network.TESTNET)
 
 	// alice keyPair
 	aliceKeyPair, err := common.HexToKeyPair("38FB967C5427C6D4CAF9BEFBF8B80B0D139BC55374643F76A13325F852C09DFD")
@@ -78,11 +78,11 @@ func TestTransactionSign(t *testing.T) {
 	transferTx := transactionFactory.
 		Signer(aliceKeyPair).
 		MaxFee(1_000000).
-		Deadline(time.Minute * 10).
+		Deadline(time.Hour * 2).
 		TransferTransactionV1()
 
 	err = transferTx.
-		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, types.TESTNET)).
+		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, network.TESTNET)).
 		Mosaics([]common.Mosaic{
 			{
 				MosaicId: 0x72C0212E67A08BCE,
