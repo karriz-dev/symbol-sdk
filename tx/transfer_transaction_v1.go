@@ -2,6 +2,7 @@ package tx
 
 import (
 	"crypto/ed25519"
+	"crypto/sha512"
 
 	"github.com/karriz-dev/symbol-sdk/common"
 	"github.com/karriz-dev/symbol-sdk/types"
@@ -38,6 +39,12 @@ func (transactionFactory *TransactionFactory) TransferTransactionV1() TransferTr
 	// TODO:: needs error check
 	innerSerializeData, _ := commonTx.Serialize()
 
+	commonTx.size += 24 // recipient
+	commonTx.size += 2  // message length
+	commonTx.size += 1  // mosaic size
+	commonTx.size += 1  // transferTransactionBodyReserved_1
+	commonTx.size += 4  // transferTransactionBodyReserved_2
+
 	return TransferTransactionV1{
 		Transaction:                       commonTx,
 		innerSerializeBytes:               innerSerializeData,
@@ -56,6 +63,8 @@ func (transferTransactionV1 *TransferTransactionV1) Mosaics(mosaics []common.Mos
 	transferTransactionV1.mosaics = mosaics
 	transferTransactionV1.mosaicsCount = common.MosaicsCount(len(mosaics))
 
+	transferTransactionV1.size += types.TransactionSize(len(mosaics) * 16) // mosaic length
+
 	return transferTransactionV1
 }
 
@@ -63,19 +72,12 @@ func (transferTransactionV1 *TransferTransactionV1) Message(message string) *Tra
 	transferTransactionV1.message = common.Message(message)
 	transferTransactionV1.messageLength = common.MessageLength(len(message))
 
+	transferTransactionV1.size += types.TransactionSize(len(message) + 1) // message length
+
 	return transferTransactionV1
 }
 
 func (transferTransactionV1 *TransferTransactionV1) Serialize() ([]byte, error) {
-	// adding tx attr size
-	transferTransactionV1.size += 24                                                             // recipient
-	transferTransactionV1.size += 2                                                              // message length
-	transferTransactionV1.size += 1                                                              // mosaic size
-	transferTransactionV1.size += 1                                                              // transferTransactionBodyReserved_1
-	transferTransactionV1.size += 4                                                              // transferTransactionBodyReserved_2
-	transferTransactionV1.size += types.TransactionSize(transferTransactionV1.mosaicsCount * 16) // mosaic calc variable size (1 mosaic = 16)
-	transferTransactionV1.size += types.TransactionSize(transferTransactionV1.messageLength)     // message length
-
 	// serialize inner common tx attrs
 	serializeData, err := transferTransactionV1.Transaction.Serialize()
 	if err != nil {
@@ -100,30 +102,32 @@ func (transferTransactionV1 *TransferTransactionV1) Serialize() ([]byte, error) 
 	return serializeData, nil
 }
 
-func (transferTransactionV1 *TransferTransactionV1) Sign() error {
+func (transferTransactionV1 *TransferTransactionV1) Sign() ([]byte, error) {
 	data, err := transferTransactionV1.Serialize()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	appendedData := append(transferTransactionV1.network.GenerationHashSeed, data...)
+
+	hasher := sha512.New()
+	hasher.Write(appendedData)
+	hashedData := hasher.Sum(nil)
+
 	edPrivateKey := ed25519.NewKeyFromSeed(transferTransactionV1.signer.PrivateKey[:])
-	sign, err := edPrivateKey.Sign(nil, data, &ed25519.Options{})
+	sign, err := edPrivateKey.Sign(nil, hashedData, &ed25519.Options{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	transferTransactionV1.signature = common.Signature(sign)
+	appendedSerializedData, err := transferTransactionV1.Serialize()
+	if err != nil {
+		return nil, err
+	}
 
-	return nil
+	return appendedSerializedData, nil
 }
-
-// func (transferTransactionV1 *TransferTransactionV1) Sign(privateKey common.PrivateKey) error {
-// 	// sign transaction hash
-// 	signingKey := ed25519.NewKeyFromSeed(privateKey[:])
-// 	sign, err := signingKey.Sign(nil, transferTransactionV1.Hash(), &ed25519.Options{})
-// 	if err != nil {
-// 		return err
-// 	}
 
 // 	transferTransactionV1.signature = common.Signature(sign)
 

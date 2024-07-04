@@ -81,7 +81,7 @@ func TestTransactionSign(t *testing.T) {
 		Deadline(time.Hour * 2).
 		TransferTransactionV1()
 
-	err = transferTx.
+	payloadBytes, err := transferTx.
 		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, network.TESTNET)).
 		Mosaics([]common.Mosaic{
 			{
@@ -91,8 +91,5 @@ func TestTransactionSign(t *testing.T) {
 		}).Sign()
 	require.NoError(t, err)
 
-	serializeData, err := transferTx.Serialize()
-	require.NoError(t, err)
-
-	t.Logf("tx hex: %s", common.BytesToHex(serializeData))
+	t.Logf("tx hex: %s", common.BytesToHex(payloadBytes))
 }

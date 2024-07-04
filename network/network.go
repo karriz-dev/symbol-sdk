@@ -28,10 +28,9 @@ type Network struct {
 }
 
 func (network Network) AddTime(duration time.Duration) uint64 {
-	currentTime := time.Now().UnixMilli()
-	calcTime := int64(duration.Seconds()) - network.EpochTime.UnixMilli()
+	currentTime := time.Now().UnixMilli() - network.EpochTime.UnixMilli()
 
-	return uint64(currentTime + calcTime)
+	return uint64(currentTime + duration.Milliseconds())
 }
 
 func hexToBytes(hexString string) []byte {

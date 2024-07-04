@@ -18,19 +18,19 @@ type ITransaction interface {
 type Transaction struct {
 	ITransaction
 
-	version  uint8                 // transaction version
-	network  network.Network       // network information
-	txType   types.TransactionType // transaction type
-	fee      types.MaxFee          // transaction max fee
-	deadline types.Deadline        // transaction deadline
+	version  uint8                 // transaction version		(1 byte)
+	network  network.Network       // network information		(1 byte)
+	txType   types.TransactionType // transaction type			(2 bytes)
+	fee      types.MaxFee          // transaction max fee		(8 bytes)
+	deadline types.Deadline        // transaction deadline		(8 bytes)
 
-	verifiableEntityHeaderReserved1 []byte // reserved value 4 bytes
-	entityBodyReserved1             []byte // reserved value 4 bytes
+	verifiableEntityHeaderReserved1 []byte // reserved value 	(4 bytes)
+	entityBodyReserved1             []byte // reserved value 	(4 bytes)
 
-	size types.TransactionSize // transaction size
+	size types.TransactionSize // transaction size			 	(4 bytes)
 
-	signature common.Signature // transaction signature
-	signer    common.KeyPair   // transaction signer publickey
+	signature common.Signature // transaction signature			(64 bytes)
+	signer    common.KeyPair   // transaction signer publickey	(32 bytes)
 }
 
 func (transaction Transaction) Serialize() ([]byte, error) {
@@ -46,6 +46,9 @@ func (transaction Transaction) Serialize() ([]byte, error) {
 	serializeData = append(serializeData, transaction.deadline.Bytes()...)
 
 	return serializeData, nil
+}
+func (transaction Transaction) Size() types.TransactionSize {
+	return transaction.size
 }
 
 func (transaction Transaction) Sign() error {

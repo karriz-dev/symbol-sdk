@@ -1,5 +1,7 @@
 package common
 
+import "encoding/binary"
+
 type Message string
 
 type MessageLength uint16
@@ -13,5 +15,8 @@ func (message Message) Bytes() []byte {
 }
 
 func (messageLength MessageLength) Bytes() []byte {
-	return []byte{byte(messageLength >> 8), byte(messageLength & 0xff)}
+	messageLengthBytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(messageLengthBytes, uint16(messageLength))
+
+	return messageLengthBytes
 }

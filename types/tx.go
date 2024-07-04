@@ -32,7 +32,7 @@ func (maxFee MaxFee) Bytes() []byte {
 
 func (deadline Deadline) Bytes() []byte {
 	result := make([]byte, 8)
-	binary.LittleEndian.PutUint32(result, uint32(deadline))
+	binary.LittleEndian.PutUint64(result, uint64(deadline))
 
 	return result
 }
