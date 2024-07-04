@@ -36,7 +36,7 @@ func TestTransactionSerialize(t *testing.T) {
 
 	// create TransferTransactionV1
 	transferTx := transactionFactory.
-		Signer(aliceKeyPair).
+		Signer(aliceKeyPair.PublicKey).
 		MaxFee(1_000000).
 		Deadline(time.Hour * 2).
 		TransferTransactionV1()
@@ -76,20 +76,26 @@ func TestTransactionSign(t *testing.T) {
 
 	// create TransferTransactionV1
 	transferTx := transactionFactory.
-		Signer(aliceKeyPair).
+		Signer(aliceKeyPair.PublicKey).
 		MaxFee(1_000000).
 		Deadline(time.Hour * 2).
 		TransferTransactionV1()
 
-	payloadBytes, err := transferTx.
+	transferTx.
 		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, network.TESTNET)).
 		Mosaics([]common.Mosaic{
 			{
 				MosaicId: 0x72C0212E67A08BCE,
 				Amount:   1_000000,
 			},
-		}).Sign()
+		})
+
+	signature, err := transactionFactory.Sign(&transferTx, aliceKeyPair.PrivateKey)
 	require.NoError(t, err)
 
-	t.Logf("tx hex: %s", common.BytesToHex(payloadBytes))
+	transferTx.AttachSignature(signature)
+	signedTxPayload, err := transferTx.Serialize()
+	require.NoError(t, err)
+
+	t.Log(common.BytesToJSONPayload(signedTxPayload))
 }

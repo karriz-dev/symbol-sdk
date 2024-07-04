@@ -2,10 +2,8 @@ package symbolsdk
 
 import (
 	"testing"
-	"time"
 
 	"github.com/karriz-dev/symbol-sdk/common"
-	"github.com/stretchr/testify/require"
 )
 
 var aliceKeyPair common.KeyPair
@@ -20,38 +18,4 @@ func TestNewSymbolFacade(t *testing.T) {
 	symbolFacade := NewSymbolFacade("testnet")
 
 	t.Log(symbolFacade)
-}
-
-func TestTransactionFactory(t *testing.T) {
-	symbolFacade := NewSymbolFacade("testnet")
-
-	transferTx := symbolFacade.TransactionFactory.
-		Signer(aliceKeyPair).
-		MaxFee(1_000000).
-		Deadline(time.Minute * 10).
-		TransferTransactionV1()
-
-	t.Log(transferTx)
-}
-
-func TestTransactionSign(t *testing.T) {
-	symbolFacade := NewSymbolFacade("testnet")
-
-	transferTx := symbolFacade.TransactionFactory.
-		Signer(aliceKeyPair).
-		MaxFee(1_000000).
-		Deadline(time.Minute * 10).
-		TransferTransactionV1()
-
-	payloadBytes, err := transferTx.
-		Recipient(common.PublicKeyToAddress(bobKeyPair.PublicKey, symbolFacade.Network)).
-		Mosaics([]common.Mosaic{
-			{
-				MosaicId: 0x72C0212E67A08BCE,
-				Amount:   1_000000,
-			},
-		}).Sign()
-	require.NoError(t, err)
-
-	t.Logf("tx hex: %s", common.BytesToHex(payloadBytes))
 }

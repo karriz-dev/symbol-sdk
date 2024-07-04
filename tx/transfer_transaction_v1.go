@@ -1,17 +1,12 @@
 package tx
 
 import (
-	"crypto"
-	"crypto/ed25519"
-	"crypto/sha512"
-
 	"github.com/karriz-dev/symbol-sdk/common"
 	"github.com/karriz-dev/symbol-sdk/types"
 )
 
 type TransferTransactionV1 struct {
 	Transaction
-	innerSerializeBytes []byte // inner serialize
 
 	recipient common.Address
 	mosaics   []common.Mosaic
@@ -37,9 +32,6 @@ func (transactionFactory *TransactionFactory) TransferTransactionV1() TransferTr
 		signer:                          transactionFactory.signer,
 	}
 
-	// TODO:: needs error check
-	innerSerializeData, _ := commonTx.Serialize()
-
 	commonTx.size += 24 // recipient
 	commonTx.size += 2  // message length
 	commonTx.size += 1  // mosaic size
@@ -48,7 +40,6 @@ func (transactionFactory *TransactionFactory) TransferTransactionV1() TransferTr
 
 	return TransferTransactionV1{
 		Transaction:                       commonTx,
-		innerSerializeBytes:               innerSerializeData,
 		transferTransactionBodyReserved_1: 0x00,
 		transferTransactionBodyReserved_2: [4]byte{0x00, 0x00, 0x00, 0x00},
 	}
@@ -78,9 +69,9 @@ func (transferTransactionV1 *TransferTransactionV1) Message(message string) *Tra
 	return transferTransactionV1
 }
 
-func (transferTransactionV1 *TransferTransactionV1) Serialize() ([]byte, error) {
+func (transferTransactionV1 TransferTransactionV1) Serialize() ([]byte, error) {
 	// serialize inner common tx attrs
-	serializeData, err := transferTransactionV1.Transaction.Serialize()
+	serializeData, err := transferTransactionV1.Transaction.serialize()
 	if err != nil {
 		return nil, err
 	}
@@ -102,72 +93,6 @@ func (transferTransactionV1 *TransferTransactionV1) Serialize() ([]byte, error) 
 
 	return serializeData, nil
 }
-
-func (transferTransactionV1 *TransferTransactionV1) Sign() ([]byte, error) {
-	data, err := transferTransactionV1.Serialize()
-	if err != nil {
-		return nil, err
-	}
-
-	appendedData := append(transferTransactionV1.network.GenerationHashSeed, data...)
-
-	hasher := sha512.New()
-	hasher.Write(appendedData)
-	hashedData := hasher.Sum(nil)
-
-	edPrivateKey := ed25519.NewKeyFromSeed(transferTransactionV1.signer.PrivateKey[:])
-	sign, err := edPrivateKey.Sign(nil, hashedData,
-		&ed25519.Options{
-			Hash: crypto.SHA512,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	transferTransactionV1.signature = common.Signature(sign)
-	appendedSerializedData, err := transferTransactionV1.Serialize()
-	if err != nil {
-		return nil, err
-	}
-
-	return appendedSerializedData, nil
-}
-
-func (transferTransactionV1 *TransferTransactionV1) Valid() error {
-	data, err := transferTransactionV1.Serialize()
-	if err != nil {
-		return err
-	}
-
-	appendedData := append(transferTransactionV1.network.GenerationHashSeed, data...)
-
-	hasher := sha512.New()
-	hasher.Write(appendedData)
-	hashedData := hasher.Sum(nil)
-
-	edPrivateKey := ed25519.NewKeyFromSeed(transferTransactionV1.signer.PrivateKey[:])
-
-	sign, err := edPrivateKey.Sign(nil, hashedData,
-		&ed25519.Options{
-			Hash: crypto.SHA512,
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	err = ed25519.VerifyWithOptions(edPrivateKey.Public().(ed25519.PublicKey), hashedData, sign,
-		&ed25519.Options{
-			Hash: crypto.SHA512,
-		})
-
-	return err
-}
-
-// func (transferTransactionV1 *TransferTransactionV1) Valid() error {
-// 	return nil
-// }
 
 // func (transferTransactionV1 TransferTransactionV1) Hash() common.Hash {
 // 	return common.Hash{}

@@ -11,7 +11,8 @@ type Hash [32]byte
 type Signature [64]byte
 
 var (
-	Empty4Bytes = []byte{0x00, 0x00, 0x00, 0x00}
+	Empty4Bytes    = []byte{0x00, 0x00, 0x00, 0x00}
+	EmptySignature = Signature{}
 )
 
 func HexToBytes(hexString string) ([]byte, error) {
@@ -38,6 +39,10 @@ func BytesToHash(data []byte) (Hash, error) {
 	}
 
 	return Hash(hasher.Sum(nil)), nil
+}
+
+func BytesToJSONPayload(payload []byte) string {
+	return "{\"payload\":\"" + BytesToHex(payload) + "\"}"
 }
 
 func (address Address) Bytes() []byte {
