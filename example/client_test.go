@@ -13,6 +13,7 @@ import (
 	symbolsdk "github.com/karriz-dev/symbol-sdk"
 	"github.com/karriz-dev/symbol-sdk/common"
 	"github.com/karriz-dev/symbol-sdk/network"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -81,10 +82,12 @@ func TestTransferTransactionV1(t *testing.T) {
 				Amount:   1_000000,
 			},
 		}).
-		Message("Hello, Go SDK").Serialize()
+		Message("Hello, Symbol - transact By Go SDK").Serialize()
 	require.NoError(t, err)
 
 	t.Log(common.BytesToHex(serializeBytes))
+
+	assert.NoError(t, transferTx.Valid())
 }
 
 func TestTransferAliceToBob1XYM(t *testing.T) {
@@ -118,7 +121,7 @@ func TestTransferAliceToBob1XYM(t *testing.T) {
 				Amount:   1_000000,
 			},
 		}).
-		Message("Hello, Go SDK").Sign()
+		Message("Hello, Symbol - transact By Go SDK").Sign()
 	require.NoError(t, err)
 
 	payload := "{\"payload\":\"" + common.BytesToHex(payloadBytes) + "\"}"

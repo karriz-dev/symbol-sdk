@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"crypto"
 	"crypto/ed25519"
 	"crypto/sha512"
 
@@ -115,7 +116,11 @@ func (transferTransactionV1 *TransferTransactionV1) Sign() ([]byte, error) {
 	hashedData := hasher.Sum(nil)
 
 	edPrivateKey := ed25519.NewKeyFromSeed(transferTransactionV1.signer.PrivateKey[:])
-	sign, err := edPrivateKey.Sign(nil, hashedData, &ed25519.Options{})
+	sign, err := edPrivateKey.Sign(nil, hashedData,
+		&ed25519.Options{
+			Hash: crypto.SHA512,
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -129,10 +134,36 @@ func (transferTransactionV1 *TransferTransactionV1) Sign() ([]byte, error) {
 	return appendedSerializedData, nil
 }
 
-// 	transferTransactionV1.signature = common.Signature(sign)
+func (transferTransactionV1 *TransferTransactionV1) Valid() error {
+	data, err := transferTransactionV1.Serialize()
+	if err != nil {
+		return err
+	}
 
-// 	return nil
-// }
+	appendedData := append(transferTransactionV1.network.GenerationHashSeed, data...)
+
+	hasher := sha512.New()
+	hasher.Write(appendedData)
+	hashedData := hasher.Sum(nil)
+
+	edPrivateKey := ed25519.NewKeyFromSeed(transferTransactionV1.signer.PrivateKey[:])
+
+	sign, err := edPrivateKey.Sign(nil, hashedData,
+		&ed25519.Options{
+			Hash: crypto.SHA512,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	err = ed25519.VerifyWithOptions(edPrivateKey.Public().(ed25519.PublicKey), hashedData, sign,
+		&ed25519.Options{
+			Hash: crypto.SHA512,
+		})
+
+	return err
+}
 
 // func (transferTransactionV1 *TransferTransactionV1) Valid() error {
 // 	return nil

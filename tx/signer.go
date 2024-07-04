@@ -1,5 +1,0 @@
-package tx
-
-func Signer() {
-
-}
