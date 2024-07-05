@@ -105,17 +105,12 @@ func (transactionFactory TransactionFactory) Sign(transaction ITransaction, sign
 		return common.Signature{}, err
 	}
 
-	appendedData := append(transactionFactory.network.GenerationHashSeed, data...)
-
-	hasher := sha512.New()
-	hasher.Write(appendedData)
-	hashedData := hasher.Sum(nil)
+	// generation hash seed + except tx header data (common tx header length: 108)
+	appendedData := append(transactionFactory.network.GenerationHashSeed, data[108:]...)
 
 	edPrivateKey := ed25519.NewKeyFromSeed(signer[:])
-	sign, err := edPrivateKey.Sign(nil, hashedData,
-		&ed25519.Options{
-			Hash: crypto.SHA512,
-		},
+	sign, err := edPrivateKey.Sign(nil, appendedData,
+		&ed25519.Options{},
 	)
 	if err != nil {
 		return common.Signature{}, err

@@ -1,6 +1,7 @@
 package example
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -143,25 +144,25 @@ func TestTransactionNetworkAnnounce(t *testing.T) {
 
 	t.Log(payload)
 
-	// symbolRestClient := http.Client{
-	// 	Timeout: time.Second * 3,
-	// }
+	symbolRestClient := http.Client{
+		Timeout: time.Second * 3,
+	}
 
-	// req, err := http.NewRequest(http.MethodPut, SymbolTestNetworkUrl+"/transactions", bytes.NewBufferString(payload))
-	// require.NoError(t, err)
+	req, err := http.NewRequest(http.MethodPut, SymbolTestNetworkUrl+"/transactions", bytes.NewBufferString(payload))
+	require.NoError(t, err)
 
-	// req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 
-	// response, err := symbolRestClient.Do(req)
-	// require.NoError(t, err)
+	response, err := symbolRestClient.Do(req)
+	require.NoError(t, err)
 
-	// body, err := io.ReadAll(response.Body)
-	// require.NoError(t, err)
+	body, err := io.ReadAll(response.Body)
+	require.NoError(t, err)
 
-	// var result map[string]any
-	// err = json.Unmarshal(body, &result)
-	// require.NoError(t, err)
+	var result map[string]any
+	err = json.Unmarshal(body, &result)
+	require.NoError(t, err)
 
-	// m, _ := json.MarshalIndent(result, "", "\t")
-	// t.Log(string(m))
+	m, _ := json.MarshalIndent(result, "", "\t")
+	t.Log(string(m))
 }
