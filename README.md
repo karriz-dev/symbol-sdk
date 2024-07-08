@@ -22,11 +22,10 @@ MessageEncode | encoding message uft-8 (encrypt) | :heavy_minus_sign:
 CoSign | transaction co-signing | :heavy_minus_sign: 
 
 ### Transaction
-ID | Name | Description | Supported
-:-- |:------------ | :-------------| :-------------
-16724 | TransferTransactionV1 | transfer mosaic from signer to receipient | :heavy_check_mark:
-16717 | MosaicDefinitionV1 | definition new a mosaic | :heavy_minus_sign:
-16973 | MosaicSupplyChange | change mosaic's supply | :heavy_minus_sign:
+Type (Decimal) | Name | Description | Supported | Embedded
+:-- |:------------ | :-------------| :------------- | :-------------
+16724 | TransferTransactionV1 | transfer mosaic from signer to receipient | :heavy_check_mark: | :heavy_check_mark:
+16712 | HashLockTransactionV1 | locked mosaic with sha256 hash | :heavy_minus_sign: | :heavy_minus_sign:
 
 ### Network Utilities
  Name | Description | Supported

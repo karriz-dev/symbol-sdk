@@ -11,66 +11,16 @@ import (
 	"github.com/karriz-dev/symbol-sdk/types"
 )
 
-type ITransaction interface {
-	// Hash() common.Hash
-	// Valid() error
-
-	AttachSignature(common.Signature)
-	Serialize() ([]byte, error)
-	Signature() common.Signature
-	GenerationHashSeed() []byte
-}
-
-type Transaction struct {
-	ITransaction
-
-	version  uint8                 // transaction version		(1 byte)
-	network  network.Network       // network information		(1 byte)
-	txType   types.TransactionType // transaction type			(2 bytes)
-	fee      types.MaxFee          // transaction max fee		(8 bytes)
-	deadline types.Deadline        // transaction deadline		(8 bytes)
-
-	verifiableEntityHeaderReserved1 []byte // reserved value 	(4 bytes)
-	entityBodyReserved1             []byte // reserved value 	(4 bytes)
-
-	size types.TransactionSize // transaction size			 	(4 bytes)
-
-	signature common.Signature // transaction signature			(64 bytes)
-	signer    common.PublicKey // transaction signer publickey	(32 bytes)
-}
-
-func (transaction Transaction) serialize() ([]byte, error) {
-	// serialize common transaciton attrs
-	serializeData := append(transaction.size.Bytes(), transaction.verifiableEntityHeaderReserved1[:]...)
-	serializeData = append(serializeData, transaction.signature[:]...)
-	serializeData = append(serializeData, transaction.signer[:]...)
-	serializeData = append(serializeData, transaction.entityBodyReserved1[:]...)
-	serializeData = append(serializeData, transaction.version)
-	serializeData = append(serializeData, byte(transaction.network.Type))
-	serializeData = append(serializeData, transaction.txType.Bytes()...)
-	serializeData = append(serializeData, transaction.fee.Bytes()...)
-	serializeData = append(serializeData, transaction.deadline.Bytes()...)
-
-	return serializeData, nil
-}
-
-func (transaction *Transaction) AttachSignature(signature common.Signature) {
-	transaction.signature = signature
-}
-
-func (transaction Transaction) Signature() common.Signature {
-	return transaction.signature
-}
-
-func (transaction Transaction) Size() types.TransactionSize {
-	return transaction.size
-}
-
 type TransactionFactory struct {
 	signer   common.PublicKey
 	network  network.Network
 	maxFee   types.MaxFee
 	deadline types.Deadline
+}
+
+type EmbeddedTransactionFactory struct {
+	signer  common.PublicKey
+	network network.Network
 }
 
 func NewTransactionFactory(network network.Network) *TransactionFactory {
@@ -79,6 +29,18 @@ func NewTransactionFactory(network network.Network) *TransactionFactory {
 		maxFee:   0,
 		deadline: 0,
 	}
+}
+
+func NewEmbeddedTransactionFactory(network network.Network) *EmbeddedTransactionFactory {
+	return &EmbeddedTransactionFactory{
+		network: network,
+	}
+}
+
+func (embeddedTransactionFactory *EmbeddedTransactionFactory) Signer(signerPublicKey common.PublicKey) *EmbeddedTransactionFactory {
+	embeddedTransactionFactory.signer = signerPublicKey
+
+	return embeddedTransactionFactory
 }
 
 func (transactionFactory *TransactionFactory) Signer(signerPublicKey common.PublicKey) *TransactionFactory {

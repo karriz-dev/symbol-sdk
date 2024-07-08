@@ -33,15 +33,18 @@ func NewKeyPair() (KeyPair, error) {
 	}, nil
 }
 
-func HexToPrivateKey(privateKeyHex string) (PrivateKey, error) {
-	hextoBytes, err := HexToBytes(privateKeyHex)
-	if err != nil {
-		return PrivateKey{}, nil
-	}
+func HexToPrivateKey(privateKeyHex string) PrivateKey {
+	hextoBytes, _ := HexToBytes(privateKeyHex)
 
 	privateKey := ed25519.NewKeyFromSeed(hextoBytes)
 
-	return PrivateKey(privateKey), nil
+	return PrivateKey(privateKey)
+}
+
+func HexToPublicKey(hexString string) PublicKey {
+	result, _ := hex.DecodeString(hexString)
+
+	return PublicKey(result)
 }
 
 func HexToAddress(addressHex string) (Address, error) {
