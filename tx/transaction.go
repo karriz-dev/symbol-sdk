@@ -7,12 +7,6 @@ import (
 )
 
 type ITransaction interface {
-	AttachSignature(common.Signature)
-	Serialize() ([]byte, error)
-	Signature() common.Signature
-}
-
-type IEmbeddedTransaction interface {
 	Serialize() ([]byte, error)
 }
 
@@ -31,51 +25,36 @@ type Transaction struct {
 	txType              types.TransactionType // transaction type				(2 bytes)
 	fee                 types.MaxFee          // transaction max fee			(8 bytes)
 	deadline            types.Deadline        // transaction deadline			(8 bytes)
+
+	isEmbedded bool // check embedded tx
 }
 
-type EmbeddedTransaction struct {
-	IEmbeddedTransaction
+func (tx Transaction) serialize() ([]byte, error) {
+	if tx.isEmbedded {
+		// embedded tx default size: 48 bytes
+		tx.size += 48
+	} else {
+		// tx default size: 128 bytes
+		tx.size += 128
+	}
 
-	size                               types.TransactionSize // transaction size			 	(4 bytes)
-	embeddedTransactionHeaderReserved1 []byte                // reserved value 					(4 bytes)
-	signer                             common.PublicKey      // transaction signer publickey	(32 bytes)
-	entityBodyReserved1                []byte                // reserved value 					(4 bytes)
-
-	// Entity Body
-	version uint8                 // transaction version				(1 byte)
-	network network.Network       // network information				(1 byte)
-	txType  types.TransactionType // transaction type					(2 bytes)
-}
-
-func (transactionHeader *Transaction) AttachSignature(signature common.Signature) {
-	transactionHeader.signature = signature
-}
-
-func (transactionHeader Transaction) serialize() ([]byte, error) {
-	serializeData := append(transactionHeader.size.Bytes(), transactionHeader.verifiableEntityHeaderReserved1[:]...)
-	serializeData = append(serializeData, transactionHeader.signature[:]...)
-	serializeData = append(serializeData, transactionHeader.signer[:]...)
-	serializeData = append(serializeData, transactionHeader.entityBodyReserved1[:]...)
-	serializeData = append(serializeData, transactionHeader.version)
-	serializeData = append(serializeData, byte(transactionHeader.network.Type))
-	serializeData = append(serializeData, transactionHeader.txType.Bytes()...)
-	serializeData = append(serializeData, transactionHeader.fee.Bytes()...)
-	serializeData = append(serializeData, transactionHeader.deadline.Bytes()...)
+	serializeData := append(tx.size.Bytes(), tx.verifiableEntityHeaderReserved1[:]...)
+	serializeData = append(serializeData, tx.signature[:]...)
+	serializeData = append(serializeData, tx.signer[:]...)
+	serializeData = append(serializeData, tx.entityBodyReserved1[:]...)
+	serializeData = append(serializeData, tx.version)
+	serializeData = append(serializeData, byte(tx.network.Type))
+	serializeData = append(serializeData, tx.txType.Bytes()...)
+	serializeData = append(serializeData, tx.fee.Bytes()...)
+	serializeData = append(serializeData, tx.deadline.Bytes()...)
 
 	return serializeData, nil
 }
 
-func (transactionHeader Transaction) Signature() common.Signature {
-	return transactionHeader.signature
+func (tx *Transaction) AttachSignature(signature common.Signature) {
+	tx.signature = signature
 }
 
-func (embeddedTransactionHeader EmbeddedTransaction) serialize() ([]byte, error) {
-	serializeData := append(embeddedTransactionHeader.size.Bytes(), embeddedTransactionHeader.embeddedTransactionHeaderReserved1[:]...)
-	serializeData = append(serializeData, embeddedTransactionHeader.signer[:]...)
-	serializeData = append(serializeData, embeddedTransactionHeader.entityBodyReserved1[:]...)
-	serializeData = append(serializeData, embeddedTransactionHeader.version)
-	serializeData = append(serializeData, byte(embeddedTransactionHeader.network.Type))
-	serializeData = append(serializeData, embeddedTransactionHeader.txType.Bytes()...)
-
-	return serializeData, nil
+func (tx Transaction) Signature() common.Signature {
+	return tx.signature
 }

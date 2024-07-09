@@ -6,32 +6,42 @@ import (
 
 	"github.com/karriz-dev/symbol-sdk/common"
 	"github.com/karriz-dev/symbol-sdk/network"
+	"github.com/stretchr/testify/require"
 )
 
-func TestTransactionFactory(t *testing.T) {
+func TestCommonTransaction(t *testing.T) {
 	// set transaction factory
 	transactionFactory := NewTransactionFactory(network.TESTNET)
 
 	// create TransferTransactionV1
 	transferTx := transactionFactory.
-		Signer(common.HexToPublicKey("14BCAB6B7D2358F9C31A40969D0ACC48125831C0390135CA35AEA282D2A54AAC")).
+		Signer(common.HexToPublicKey("")).
 		MaxFee(1_000000).
 		Deadline(time.Hour * 2).
-		TransferTransactionV1()
+		TransferTransactionV1(false)
 
+	// sign
+	sign, err := transactionFactory.Sign(transferTx, common.HexToPrivateKey(""))
+	require.NoError(t, err)
+
+	// attach sign
+	transferTx.AttachSignature(sign)
+
+	// logging
+	t.Logf("signature hex: %s", common.BytesToHex(sign[:]))
 	t.Logf("transferTx: %+v", transferTx)
 }
 
-func TestEmbeddedTransactionFactory(t *testing.T) {
+func TestEmbeddedTransaction(t *testing.T) {
 	// set transaction factory
-	embeddedTransactionFactory := NewEmbeddedTransactionFactory(network.TESTNET)
+	txFactory := NewTransactionFactory(network.TESTNET)
 
-	// create EmbeddedTransferTransactionV1
-	embeddedTransactionList := make([]IEmbeddedTransaction, 0)
+	// create TransferTransactionV1 (isEmbedded = true)
+	innerTxList := make([]ITransaction, 0)
 
-	embeddedTransferTx := embeddedTransactionFactory.
+	embeddedTransferTx := txFactory.
 		Signer(common.HexToPublicKey("14BCAB6B7D2358F9C31A40969D0ACC48125831C0390135CA35AEA282D2A54AAC")).
-		EmbeddedTransferTransactionV1()
+		TransferTransactionV1(true)
 
 	aliceAddress, _ := common.DecodeAddress("TDWNFH2JA5FG3L5LTGYIS5TB475TENZVYJ4CQCI")
 
@@ -39,14 +49,14 @@ func TestEmbeddedTransactionFactory(t *testing.T) {
 		Recipient(aliceAddress).
 		Message("Hello, I'm Embedded Tx")
 
-	embeddedTransactionList = append(embeddedTransactionList, embeddedTransferTx)
-	embeddedTransactionList = append(embeddedTransactionList, embeddedTransferTx)
-	embeddedTransactionList = append(embeddedTransactionList, embeddedTransferTx)
+	innerTxList = append(innerTxList, embeddedTransferTx)
+	innerTxList = append(innerTxList, embeddedTransferTx)
+	innerTxList = append(innerTxList, embeddedTransferTx)
 
-	t.Logf("embeddedTransactionList Count: %d", len(embeddedTransactionList))
-	t.Logf("embeddedTransactionList: %+v", embeddedTransactionList)
+	t.Logf("inner tx count: %d", len(innerTxList))
+	t.Logf("inner tx list: %+v", innerTxList)
 
-	for _, etx := range embeddedTransactionList {
+	for _, etx := range innerTxList {
 		serializeBytes, _ := etx.Serialize()
 
 		t.Logf("serializeBytes: %+v", serializeBytes)

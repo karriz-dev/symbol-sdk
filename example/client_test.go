@@ -72,7 +72,7 @@ func TestTransactionSignAndVerify(t *testing.T) {
 		MaxFee(1_000000).
 		Deadline(time.Minute * 10).
 		Signer(aliceKeyPair.PublicKey).
-		TransferTransactionV1()
+		TransferTransactionV1(false)
 
 	transferTx.
 		Recipient(bobAddress).
@@ -121,7 +121,7 @@ func TestTransactionNetworkAnnounce(t *testing.T) {
 		MaxFee(1_000000).
 		Deadline(time.Minute * 10).
 		Signer(aliceKeyPair.PublicKey).
-		TransferTransactionV1()
+		TransferTransactionV1(false)
 
 	transferTx.
 		Recipient(bobAddress).

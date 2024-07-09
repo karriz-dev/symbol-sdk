@@ -18,29 +18,12 @@ type TransactionFactory struct {
 	deadline types.Deadline
 }
 
-type EmbeddedTransactionFactory struct {
-	signer  common.PublicKey
-	network network.Network
-}
-
 func NewTransactionFactory(network network.Network) *TransactionFactory {
 	return &TransactionFactory{
 		network:  network,
 		maxFee:   0,
 		deadline: 0,
 	}
-}
-
-func NewEmbeddedTransactionFactory(network network.Network) *EmbeddedTransactionFactory {
-	return &EmbeddedTransactionFactory{
-		network: network,
-	}
-}
-
-func (embeddedTransactionFactory *EmbeddedTransactionFactory) Signer(signerPublicKey common.PublicKey) *EmbeddedTransactionFactory {
-	embeddedTransactionFactory.signer = signerPublicKey
-
-	return embeddedTransactionFactory
 }
 
 func (transactionFactory *TransactionFactory) Signer(signerPublicKey common.PublicKey) *TransactionFactory {
