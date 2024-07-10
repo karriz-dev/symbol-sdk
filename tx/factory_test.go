@@ -43,10 +43,8 @@ func TestEmbeddedTransaction(t *testing.T) {
 		Signer(common.HexToPublicKey("14BCAB6B7D2358F9C31A40969D0ACC48125831C0390135CA35AEA282D2A54AAC")).
 		TransferTransactionV1(true)
 
-	aliceAddress, _ := common.DecodeAddress("TDWNFH2JA5FG3L5LTGYIS5TB475TENZVYJ4CQCI")
-
 	embeddedTransferTx.
-		Recipient(aliceAddress).
+		Recipient(common.DecodeAddress("TDWNFH2JA5FG3L5LTGYIS5TB475TENZVYJ4CQCI")).
 		Message("Hello, I'm Embedded Tx")
 
 	innerTxList = append(innerTxList, embeddedTransferTx)

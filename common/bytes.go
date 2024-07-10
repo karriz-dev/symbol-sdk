@@ -8,7 +8,13 @@ import (
 )
 
 type Hash [32]byte
+
 type Signature [64]byte
+type CoSignature struct {
+	Version   uint16
+	Signer    PublicKey
+	Signature Signature
+}
 
 var (
 	Empty4Bytes    = []byte{0x00, 0x00, 0x00, 0x00}

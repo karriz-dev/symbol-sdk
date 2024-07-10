@@ -30,23 +30,32 @@ type Transaction struct {
 }
 
 func (tx Transaction) serialize() ([]byte, error) {
+	var serializeData []byte
+
 	if tx.isEmbedded {
 		// embedded tx default size: 48 bytes
 		tx.size += 48
+
+		serializeData = append(tx.size.Bytes(), tx.verifiableEntityHeaderReserved1[:]...)
+		serializeData = append(serializeData, tx.signer[:]...)
+		serializeData = append(serializeData, tx.entityBodyReserved1[:]...)
+		serializeData = append(serializeData, tx.version)
+		serializeData = append(serializeData, byte(tx.network.Type))
+		serializeData = append(serializeData, tx.txType.Bytes()...)
 	} else {
 		// tx default size: 128 bytes
 		tx.size += 128
-	}
 
-	serializeData := append(tx.size.Bytes(), tx.verifiableEntityHeaderReserved1[:]...)
-	serializeData = append(serializeData, tx.signature[:]...)
-	serializeData = append(serializeData, tx.signer[:]...)
-	serializeData = append(serializeData, tx.entityBodyReserved1[:]...)
-	serializeData = append(serializeData, tx.version)
-	serializeData = append(serializeData, byte(tx.network.Type))
-	serializeData = append(serializeData, tx.txType.Bytes()...)
-	serializeData = append(serializeData, tx.fee.Bytes()...)
-	serializeData = append(serializeData, tx.deadline.Bytes()...)
+		serializeData = append(tx.size.Bytes(), tx.verifiableEntityHeaderReserved1[:]...)
+		serializeData = append(serializeData, tx.signature[:]...)
+		serializeData = append(serializeData, tx.signer[:]...)
+		serializeData = append(serializeData, tx.entityBodyReserved1[:]...)
+		serializeData = append(serializeData, tx.version)
+		serializeData = append(serializeData, byte(tx.network.Type))
+		serializeData = append(serializeData, tx.txType.Bytes()...)
+		serializeData = append(serializeData, tx.fee.Bytes()...)
+		serializeData = append(serializeData, tx.deadline.Bytes()...)
+	}
 
 	return serializeData, nil
 }

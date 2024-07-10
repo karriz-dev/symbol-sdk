@@ -71,15 +71,15 @@ func HexToKeyPair(privateKeyHex string) (KeyPair, error) {
 	}, nil
 }
 
-func DecodeAddress(encodedAddress string) (Address, error) {
+func DecodeAddress(encodedAddress string) Address {
 	base32Decoder := base32.StdEncoding.WithPadding(base32.NoPadding)
 
 	decodeAddr, err := base32Decoder.DecodeString(encodedAddress)
 	if err != nil {
-		return Address{}, nil
+		return Address{}
 	}
 
-	return Address(decodeAddr), nil
+	return Address(decodeAddr)
 }
 
 func PublicKeyToAddress(publicKey PublicKey, network network.Network) Address {

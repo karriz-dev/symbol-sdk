@@ -18,7 +18,12 @@ func (message Message) Bytes() []byte {
 
 func (messageLength MessageLength) Bytes() []byte {
 	messageLengthBytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(messageLengthBytes, uint16(messageLength+1))
+
+	if messageLength > 0 {
+		binary.LittleEndian.PutUint16(messageLengthBytes, uint16(messageLength+1))
+	} else {
+		binary.LittleEndian.PutUint16(messageLengthBytes, uint16(messageLength))
+	}
 
 	return messageLengthBytes
 }
