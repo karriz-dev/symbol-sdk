@@ -5,6 +5,7 @@ import (
 
 	"github.com/karriz-dev/symbol-sdk/common"
 	"github.com/karriz-dev/symbol-sdk/network"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +24,7 @@ func TestCalcMerkleHashOneTransaction(t *testing.T) {
 	merkleRootHash, err := MerkleRootHash([]ITransaction{embeddedTransferTx})
 	require.NoError(t, err)
 
-	t.Log(common.BytesToHex(merkleRootHash[:]))
+	assert.Equal(t, "B701124087B58ACC62196EC81B8437E0D5D1A064B47BD719E0ECA74452031894", common.BytesToHex(merkleRootHash[:]))
 }
 
 func TestCalcMerkleHashEvenTransactions(t *testing.T) {
@@ -45,7 +46,7 @@ func TestCalcMerkleHashEvenTransactions(t *testing.T) {
 	merkleRootHash, err := MerkleRootHash(transactions)
 	require.NoError(t, err)
 
-	t.Log(common.BytesToHex(merkleRootHash[:]))
+	assert.Equal(t, "ACDD2D30AFED90C0ADDE938A40BE547F76A932BF93A79C23351441B276857FBB", common.BytesToHex(merkleRootHash[:]))
 }
 
 func TestCalcMerkleHashOddTransactions(t *testing.T) {
@@ -68,5 +69,5 @@ func TestCalcMerkleHashOddTransactions(t *testing.T) {
 	merkleRootHash, err := MerkleRootHash(transactions)
 	require.NoError(t, err)
 
-	t.Log(common.BytesToHex(merkleRootHash[:]))
+	assert.Equal(t, "06FAD3281362B48293C077FB3760A13B86FADB25941B14EEC2A5E9AFE2048C07", common.BytesToHex(merkleRootHash[:]))
 }
