@@ -35,6 +35,9 @@ func NewKeyPair() (KeyPair, error) {
 
 func HexToPrivateKey(privateKeyHex string) PrivateKey {
 	hextoBytes, _ := HexToBytes(privateKeyHex)
+	if len(hextoBytes) != 32 {
+		return PrivateKey{}
+	}
 
 	privateKey := ed25519.NewKeyFromSeed(hextoBytes)
 
@@ -111,6 +114,12 @@ func (privateKey PrivateKey) Hex() string {
 	encodedHex := hex.EncodeToString(privateKey[:])
 
 	return strings.ToUpper(encodedHex)
+}
+
+func (privateKey PrivateKey) PublicKey() PublicKey {
+	pk := ed25519.NewKeyFromSeed(privateKey[:])
+
+	return PublicKey(pk.Public().(ed25519.PublicKey))
 }
 
 func (publicKey PublicKey) Hex() string {

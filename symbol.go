@@ -1,12 +1,12 @@
 package symbolsdk
 
 import (
+	"github.com/karriz-dev/symbol-sdk/factory"
 	"github.com/karriz-dev/symbol-sdk/network"
-	"github.com/karriz-dev/symbol-sdk/tx"
 )
 
 type SymbolFacade struct {
-	TransactionFactory tx.TransactionFactory
+	TransactionFactory factory.TransactionFactory
 	Network            network.Network
 }
 
@@ -25,7 +25,7 @@ func NewSymbolFacade(networkType string) *SymbolFacade {
 		symbolNetwork = network.TESTNET
 	}
 	return &SymbolFacade{
-		TransactionFactory: *tx.NewTransactionFactory(symbolNetwork),
+		TransactionFactory: *factory.NewTransactionFactory(symbolNetwork),
 		Network:            symbolNetwork,
 	}
 }

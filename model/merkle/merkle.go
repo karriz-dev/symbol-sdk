@@ -1,9 +1,9 @@
-package tx
+package merkle
 
 import (
 	"errors"
 
-	"github.com/karriz-dev/symbol-sdk/common"
+	"github.com/karriz-dev/symbol-sdk/model/tx"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -11,28 +11,23 @@ var (
 	ErrEmptyTransaction = errors.New("transaction list size cannot be zero")
 )
 
-func MerkleRootHash(transactions []ITransaction) (common.Hash, error) {
-	if len(transactions) <= 0 {
-		return common.Hash{}, ErrEmptyTransaction
+func MerkleRootHash(txs []tx.Transaction) (tx.Hash, error) {
+	if len(txs) <= 0 {
+		return tx.Hash{}, ErrEmptyTransaction
 	}
 
-	var hashes []common.Hash
+	var hashes []tx.Hash
 	hasher := sha3.New256()
 
-	for _, tx := range transactions {
+	for _, tx := range txs {
 		hasher.Reset()
+		hasher.Write(tx.Serialize())
 
-		serializeBytes, err := tx.Serialize()
-		if err != nil {
-			return common.Hash{}, err
-		}
-
-		hasher.Write(serializeBytes)
-		hashes = append(hashes, common.Hash(hasher.Sum(nil)[:]))
+		hashes = append(hashes, tx.Hash(hasher.Sum(nil)[:]))
 	}
 
 	if len(hashes) == 1 {
-		return common.Hash(hashes[0]), nil
+		return tx.Hash(hashes[0]), nil
 	}
 
 	numRemainingHashes := len(hashes)
@@ -50,12 +45,12 @@ func MerkleRootHash(transactions []ITransaction) (common.Hash, error) {
 				numRemainingHashes += 1
 			}
 
-			hashes[i/2] = common.Hash(hasher.Sum(nil))
+			hashes[i/2] = tx.Hash(hasher.Sum(nil))
 			i += 2
 		}
 
 		numRemainingHashes = numRemainingHashes / 2
 	}
 
-	return common.Hash(hashes[0]), nil
+	return tx.Hash(hashes[0]), nil
 }

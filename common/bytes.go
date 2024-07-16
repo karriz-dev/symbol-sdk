@@ -1,56 +1,67 @@
 package common
 
 import (
+	"encoding/binary"
 	"encoding/hex"
+	"math/big"
 	"strings"
 
 	"golang.org/x/crypto/sha3"
 )
 
-type Hash [32]byte
-
-type Signature [64]byte
-type CoSignature struct {
-	Version   uint16
-	Signer    PublicKey
-	Signature Signature
+func aa() {
+	
 }
 
-var (
-	Empty4Bytes    = []byte{0x00, 0x00, 0x00, 0x00}
-	EmptySignature = Signature{}
-)
 
-func HexToBytes(hexString string) ([]byte, error) {
-	result, err := hex.DecodeString(hexString)
-	if err != nil {
-		return nil, err
-	}
 
-	return result, nil
-}
+// func From[T ~uint | []byte](data T) []byte {
 
-func BytesToHex(data []byte) string {
-	encodedString := hex.EncodeToString(data)
+// 	switch v := data.(type) {
+// 	case uint16:
+// 		result := make([]byte, 2)
+// 		binary.LittleEndian.PutUint16(result, v)
+// 		return result
+// 	case uint:
+// 		result := make([]byte, 4)
+// 		binary.LittleEndian.PutUint32(result, uint32(v))
+// 		return result
+// 	case uint32:
+// 		result := make([]byte, 4)
+// 		binary.LittleEndian.PutUint32(result, uint32(v))
+// 		return result
+// 	case uint64:
+// 		result := make([]byte, 8)
+// 		binary.LittleEndian.PutUint64(result, v)
+// 		return result
+// 	default:
+// 		return []byte{}
+// 	}
+// }
 
-	return strings.ToUpper(encodedString)
-}
+// func (bytes Bytes) Hex() string {
+// 	encodedString := hex.EncodeToString(bytes)
 
-func BytesToHash(data []byte) (Hash, error) {
-	hasher := sha3.New256()
+// 	return strings.ToUpper(encodedString)
+// }
 
-	_, err := hasher.Write(data)
-	if err != nil {
-		return Hash{}, err
-	}
+// func BytesToHex(data []byte) string {
+// 	encodedString := hex.EncodeToString(data)
 
-	return Hash(hasher.Sum(nil)), nil
-}
+// 	return strings.ToUpper(encodedString)
+// }
 
-func BytesToJSONPayload(payload []byte) string {
-	return "{\"payload\":\"" + BytesToHex(payload) + "\"}"
-}
+// func BytesToHash(data []byte) (Hash, error) {
+// 	hasher := sha3.New256()
 
-func (address Address) Bytes() []byte {
-	return address[:]
-}
+// 	_, err := hasher.Write(data)
+// 	if err != nil {
+// 		return Hash{}, err
+// 	}
+
+// 	return Hash(hasher.Sum(nil)), nil
+// }
+
+// func BytesToJSONPayload(payload []byte) string {
+// 	return "{\"payload\":\"" + BytesToHex(payload) + "\"}"
+// }
