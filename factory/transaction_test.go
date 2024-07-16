@@ -1,10 +1,12 @@
-package factory
+package factory_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/karriz-dev/symbol-sdk/factory"
 	"github.com/karriz-dev/symbol-sdk/model/account"
+	"github.com/karriz-dev/symbol-sdk/model/tx"
 	"github.com/karriz-dev/symbol-sdk/network"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +25,7 @@ func init() {
 
 func TestTransferTransactionV1(t *testing.T) {
 	// set transaction factory
-	transactionFactory := NewTransactionFactory(network.TESTNET)
+	transactionFactory := factory.NewTransactionFactory(network.TESTNET)
 
 	// create TransferTransactionV1
 	transferTx := transactionFactory.
@@ -32,6 +34,9 @@ func TestTransferTransactionV1(t *testing.T) {
 		Deadline(time.Hour * 2).
 		TransferTransactionV1(false)
 
+	transferTx.
+		Recipient(aliceAccount.Address)
+
 	// sign
 	sign, err := transactionFactory.Sign(transferTx, aliceAccount.PrivateKey)
 	require.NoError(t, err)
@@ -39,62 +44,53 @@ func TestTransferTransactionV1(t *testing.T) {
 	// attach sign
 	transferTx.AttachSignature(sign)
 
-	// logging
-	t.Logf("signature hex: %s", sign.Hex())
-	t.Logf("transferTx: %+v", transferTx)
+	t.Logf("signature: %s", sign.Hex())
 }
 
-// func TestEmbeddedTransaction(t *testing.T) {
-// 	// set transaction factory
-// 	txFactory := NewTransactionFactory(network.TESTNET)
+func TestEmbeddedTransaction(t *testing.T) {
+	// set transaction factory
+	txFactory := factory.NewTransactionFactory(network.TESTNET)
 
-// 	// create TransferTransactionV1 (isEmbedded = true)
-// 	innerTxList := make([]ITransaction, 0)
+	// create TransferTransactionV1 (isEmbedded = true)
+	embeddedTransferTx := txFactory.
+		Signer(aliceAccount.PublicKey).
+		TransferTransactionV1(true)
 
-// 	embeddedTransferTx := txFactory.
-// 		Signer(common.HexToPublicKey("14BCAB6B7D2358F9C31A40969D0ACC48125831C0390135CA35AEA282D2A54AAC")).
-// 		TransferTransactionV1(true)
+	embeddedTransferTx.
+		Recipient(aliceAccount.Address)
 
-// 	embeddedTransferTx.
-// 		Recipient(common.DecodeAddress("TDWNFH2JA5FG3L5LTGYIS5TB475TENZVYJ4CQCI")).
-// 		Message("Hello, I'm Embedded Tx")
+	innerTxList := []tx.Transaction{embeddedTransferTx, embeddedTransferTx, embeddedTransferTx}
 
-// 	innerTxList = append(innerTxList, embeddedTransferTx)
-// 	innerTxList = append(innerTxList, embeddedTransferTx)
-// 	innerTxList = append(innerTxList, embeddedTransferTx)
+	t.Logf("inner tx count: %d", len(innerTxList))
 
-// 	t.Logf("inner tx count: %d", len(innerTxList))
-// 	t.Logf("inner tx list: %+v", innerTxList)
+	for i, innerTx := range innerTxList {
+		innerTxSerializedBytes, err := innerTx.Serialize()
+		require.NoError(t, err)
 
-// 	for _, etx := range innerTxList {
-// 		t.Logf("serializeBytes: %+v", etx.Serialize())
-// 	}
-// }
+		t.Logf("No.%d innerTxSerializedBytes: %+v", i, innerTxSerializedBytes)
+	}
+}
 
-// func TestAggregateTransaction(t *testing.T) {
-// 	txFactory := NewTransactionFactory(network.TESTNET)
+func TestAggregateTransaction(t *testing.T) {
+	txFactory := factory.NewTransactionFactory(network.TESTNET)
 
-// 	innerTxList := make([]ITransaction, 0)
+	embeddedTransferTx := txFactory.
+		Signer(aliceAccount.PublicKey).
+		TransferTransactionV1(true)
 
-// 	embeddedTransferTx := txFactory.
-// 		Signer(common.HexToPublicKey("8B74E74D1EC9496E5CDCE56BE21330668CA6EAAFE73CC033E7C35D6B4DEE2179")).
-// 		TransferTransactionV1(true)
+	embeddedTransferTx.
+		Recipient(aliceAccount.Address)
 
-// 	embeddedTransferTx.
-// 		Recipient(common.DecodeAddress("TBLWGZ5W6VYS7BAE3O6VMN5VIW4FTC3BCDEYDMA"))
+	innerTxList := []tx.Transaction{embeddedTransferTx, embeddedTransferTx, embeddedTransferTx}
 
-// 	innerTxList = append(innerTxList, embeddedTransferTx)
-// 	innerTxList = append(innerTxList, embeddedTransferTx)
-// 	innerTxList = append(innerTxList, embeddedTransferTx)
+	aggregateTx := txFactory.
+		Signer(aliceAccount.PublicKey).
+		AggregateBondedTransactionV2()
 
-// 	aggregateTx := txFactory.
-// 		Signer(common.HexToPublicKey("8B74E74D1EC9496E5CDCE56BE21330668CA6EAAFE73CC033E7C35D6B4DEE2179")).
-// 		AggregateBondedTransactionV2()
+	aggregateTx.Transactions(innerTxList)
 
-// 	aggregateTx.Transactions(innerTxList)
-
-// 	t.Logf("%+v", aggregateTx)
-// }
+	t.Logf("aggregateTx: %+v", aggregateTx)
+}
 
 // func TestSwapWithServiceProvider(t *testing.T) {
 // 	// if you need test this function, plz input 3 account's private key

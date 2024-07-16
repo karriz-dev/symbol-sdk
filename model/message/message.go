@@ -15,13 +15,9 @@ func (message Message) Bytes() []byte {
 }
 
 func (message Message) LenBytes() []byte {
-	messageLength := uint16(0)
-
 	if len(message) <= 0 {
-		return binary.LittleEndian.AppendUint16(nil, messageLength)
+		return binary.LittleEndian.AppendUint16(nil, 0)
 	}
 
-	messageLength += 1
-
-	return binary.LittleEndian.AppendUint16(nil, messageLength)
+	return binary.LittleEndian.AppendUint16(nil, uint16(len(message)+1))
 }

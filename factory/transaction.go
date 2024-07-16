@@ -1,9 +1,8 @@
 package factory
 
 import (
-	"crypto"
 	"crypto/ed25519"
-	"crypto/sha512"
+	"fmt"
 	"time"
 
 	"github.com/karriz-dev/symbol-sdk/model/account"
@@ -43,12 +42,18 @@ func (transactionFactory *TransactionFactory) MaxFee(maxFee uint64) *Transaction
 func (transactionFactory *TransactionFactory) Deadline(deadline time.Duration) *TransactionFactory {
 	transactionFactory.deadline.Add(transactionFactory.network.AddTime(deadline))
 
+	fmt.Println("transactionFactory.deadline", transactionFactory.deadline)
+	fmt.Println("transactionFactory.deadline.Bytes", transactionFactory.deadline.Bytes())
 	return transactionFactory
 }
 
 func (transactionFactory TransactionFactory) Sign(tx tx.Transaction, signer account.PrivateKey) (signature.Signature, error) {
-	// generation hash seed + except tx header data (common tx header length: 108)
-	appendedData := append(transactionFactory.network.GenerationHashSeed, tx.Serialize()[108:]...)
+	baseTxSerializeBytes, err := tx.Serialize()
+	if err != nil {
+		return signature.Signature{}, err
+	}
+
+	appendedData := append(transactionFactory.network.GenerationHashSeed, baseTxSerializeBytes[108:]...)
 
 	edPrivateKey := ed25519.NewKeyFromSeed(signer[:])
 	sign, err := edPrivateKey.Sign(nil, appendedData,
@@ -62,16 +67,13 @@ func (transactionFactory TransactionFactory) Sign(tx tx.Transaction, signer acco
 }
 
 func (transactionFactory TransactionFactory) Verify(payload []byte, signature []byte, signer account.PublicKey) error {
-	appendedData := append(transactionFactory.network.GenerationHashSeed, payload...)
+	appendedData := append(transactionFactory.network.GenerationHashSeed, payload[108:]...)
 
-	hasher := sha512.New()
-	hasher.Write(appendedData)
-	hashedData := hasher.Sum(nil)
-
-	err := ed25519.VerifyWithOptions((ed25519.PublicKey)(signer[:]), hashedData, signature,
-		&ed25519.Options{
-			Hash: crypto.SHA512,
-		},
+	err := ed25519.VerifyWithOptions(
+		ed25519.PublicKey(signer[:]),
+		appendedData,
+		signature,
+		&ed25519.Options{},
 	)
 
 	return err
@@ -85,5 +87,14 @@ func (transactionFactory TransactionFactory) TransferTransactionV1(isEmbedded bo
 		transactionFactory.deadline,
 		transactionFactory.signer,
 		isEmbedded,
+	)
+}
+
+func (transactionFactory TransactionFactory) AggregateBondedTransactionV2() tx.AggregateBondedTransactionV2 {
+	return tx.NewAggregateBondedTransactionV2(
+		transactionFactory.network,
+		transactionFactory.maxFee,
+		transactionFactory.deadline,
+		transactionFactory.signer,
 	)
 }

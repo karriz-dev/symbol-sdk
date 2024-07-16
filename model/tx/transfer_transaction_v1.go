@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"github.com/karriz-dev/symbol-sdk/errors"
 	"github.com/karriz-dev/symbol-sdk/model/account"
 	"github.com/karriz-dev/symbol-sdk/model/decimal"
 	"github.com/karriz-dev/symbol-sdk/model/message"
@@ -78,11 +79,14 @@ func (tx *TransferTransactionV1) Message(msg string) *TransferTransactionV1 {
 	return tx
 }
 
-func (tx TransferTransactionV1) Serialize() []byte {
-	// serialize inner common tx attrs
-	serializeData := tx.Transaction.Serialize()
-	if len(serializeData) <= 0 {
-		return nil
+func (tx TransferTransactionV1) Serialize() ([]byte, error) {
+	// serialize base tx attrs
+	serializeData, err := tx.BaseTransaction.Serialize()
+	if err != nil {
+		return nil, err
+	}
+	if len(tx.recipient) == 0 {
+		return nil, errors.ErrRecipientNotValid
 	}
 
 	// serialize attrs
@@ -100,5 +104,5 @@ func (tx TransferTransactionV1) Serialize() []byte {
 	// serialize message
 	serializeData = append(serializeData, tx.message.Bytes()...)
 
-	return serializeData
+	return serializeData, nil
 }

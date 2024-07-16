@@ -8,8 +8,8 @@ import (
 )
 
 type Transaction interface {
-	Serialize() []byte
-	Size() decimal.UInt32
+	Serialize() ([]byte, error)
+	Size() uint32
 }
 
 type BaseTransaction struct {
@@ -31,7 +31,7 @@ type BaseTransaction struct {
 	hash       Hash // tx hash
 }
 
-func (tx BaseTransaction) Serialize() []byte {
+func (tx BaseTransaction) Serialize() ([]byte, error) {
 	// TODO:: check error case
 	var serializeData []byte
 
@@ -58,11 +58,11 @@ func (tx BaseTransaction) Serialize() []byte {
 		serializeData = append(serializeData, tx.deadline.Bytes()...)
 	}
 
-	return serializeData
+	return serializeData, nil
 }
 
-func (tx BaseTransaction) Size() decimal.UInt32 {
-	return tx.size
+func (tx BaseTransaction) Size() uint32 {
+	return tx.size.Value()
 }
 
 func (tx *BaseTransaction) AttachSignature(signature signature.Signature) {
