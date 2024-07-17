@@ -8,6 +8,6 @@ import (
 func TestFromNetworkTime(t *testing.T) {
 	t.Log(TESTNET.EpochTime.UnixMilli())
 
-	timestamp := TESTNET.AddTime(time.Hour * 2)
+	timestamp := TESTNET.Time(time.Hour * 2)
 	t.Log(timestamp)
 }
