@@ -4,6 +4,7 @@ import (
 	"github.com/karriz-dev/symbol-sdk/model/account"
 	"github.com/karriz-dev/symbol-sdk/model/decimal"
 	"github.com/karriz-dev/symbol-sdk/network"
+	"golang.org/x/crypto/sha3"
 )
 
 type AggregateBondedTransactionV2 struct {
@@ -83,6 +84,22 @@ func (tx AggregateBondedTransactionV2) MerkleRootHash() Hash {
 	return tx.transactionHash
 }
 
-func (tx AggregateBondedTransactionV2) Hash() Hash {
-	return Hash{}
+func (tx AggregateBondedTransactionV2) Hash(generationHashSeed []byte) Hash {
+	hasher := sha3.New256()
+
+	hasher.Write(tx.signature[:])    // signature
+	hasher.Write(tx.signer[:])       // signer public key
+	hasher.Write(generationHashSeed) // generationhashssed
+
+	txSerializedBytes, err := tx.Serialize()
+	if err != nil {
+		// TODO :: err check
+		return Hash{}
+	}
+
+	hasher.Write(txSerializedBytes[108:160]) // tx serialize (108~160)
+
+	hashedBytes := hasher.Sum(nil)
+
+	return Hash(hashedBytes)
 }
