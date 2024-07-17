@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/karriz-dev/symbol-sdk/model/account"
 	"github.com/karriz-dev/symbol-sdk/model/decimal"
 	"github.com/karriz-dev/symbol-sdk/network"
@@ -99,6 +101,11 @@ func (tx AggregateBondedTransactionV2) Hash(generationHashSeed []byte) Hash {
 	hasher.Write(tx.signer[:])       // signer public key
 	hasher.Write(generationHashSeed) // generationhashssed
 	hasher.Write(payload)            // tx payload
+
+	fmt.Println("[HASH AGGREGATE BONDED] ", tx.signature[:])
+	fmt.Println("[HASH AGGREGATE BONDED] ", tx.signer[:])
+	fmt.Println("[HASH AGGREGATE BONDED] ", generationHashSeed)
+	fmt.Println("[HASH AGGREGATE BONDED] ", len(payload), payload)
 
 	hashedBytes := hasher.Sum(nil)
 
