@@ -87,6 +87,10 @@ func (v *UInt64) Add(addedValue uint64) {
 	v.value += addedValue
 }
 
+func (v *UInt64) Sub(addedValue uint64) {
+	v.value -= addedValue
+}
+
 func (v *UInt64) Value() uint64 {
 	return v.value
 }

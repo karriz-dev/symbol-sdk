@@ -2,7 +2,6 @@ package factory
 
 import (
 	"crypto/ed25519"
-	"fmt"
 	"time"
 
 	"github.com/karriz-dev/symbol-sdk/model/account"
@@ -34,16 +33,14 @@ func (transactionFactory *TransactionFactory) Signer(signerPublicKey account.Pub
 }
 
 func (transactionFactory *TransactionFactory) MaxFee(maxFee uint64) *TransactionFactory {
-	transactionFactory.maxFee.Add(maxFee)
+	transactionFactory.maxFee = decimal.NewUInt64(maxFee)
 
 	return transactionFactory
 }
 
 func (transactionFactory *TransactionFactory) Deadline(deadline time.Duration) *TransactionFactory {
-	transactionFactory.deadline.Add(transactionFactory.network.AddTime(deadline))
+	transactionFactory.deadline = decimal.NewUInt64(transactionFactory.network.Time(deadline))
 
-	fmt.Println("transactionFactory.deadline", transactionFactory.deadline)
-	fmt.Println("transactionFactory.deadline.Bytes", transactionFactory.deadline.Bytes())
 	return transactionFactory
 }
 
@@ -96,5 +93,15 @@ func (transactionFactory TransactionFactory) AggregateBondedTransactionV2() tx.A
 		transactionFactory.maxFee,
 		transactionFactory.deadline,
 		transactionFactory.signer,
+	)
+}
+
+func (transactionFactory TransactionFactory) HashLockTransactionV1(isEmbedded bool) tx.HashLockTransactionV1 {
+	return tx.NewHashLockTransactionV1(
+		transactionFactory.network,
+		transactionFactory.maxFee,
+		transactionFactory.deadline,
+		transactionFactory.signer,
+		isEmbedded,
 	)
 }

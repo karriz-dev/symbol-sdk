@@ -27,7 +27,7 @@ type Network struct {
 	GenerationHashSeed []byte    // Network generation hash seed
 }
 
-func (network Network) AddTime(duration time.Duration) uint64 {
+func (network Network) Time(duration time.Duration) uint64 {
 	currentTime := time.Now().UnixMilli() - network.EpochTime.UnixMilli()
 
 	return uint64(currentTime + duration.Milliseconds())
