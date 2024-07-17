@@ -10,15 +10,14 @@ import (
 type AggregateBondedTransactionV2 struct {
 	BaseTransaction
 
-	transactionHash                     Hash           // Hash of the aggregate's transaction.
+	aggregateTxMerkleRoot               Hash           // Hash of the aggregate's transaction.
 	payloadSize                         decimal.UInt32 // Transaction payload size in bytes. This is the total number of bytes occupied by all embedded transactions, including any padding present.
 	aggregateTransactionHeaderReserved1 decimal.UInt32 // reserved padding value
 	transactions                        []Transaction  // Embedded transaction data. Transactions are variable-sized and the total payload size is in bytes. Embedded transactions cannot be aggregates.
 }
 
 func NewAggregateBondedTransactionV2(network network.Network, maxFee decimal.UInt64, deadline decimal.UInt64, signer account.PublicKey) AggregateBondedTransactionV2 {
-	tx := BaseTransaction{
-		size:                            decimal.NewUInt32(40),
+	baseTx := BaseTransaction{
 		version:                         decimal.NewUInt8(0x02),
 		network:                         network,
 		txType:                          decimal.NewUInt16(0x4241),
@@ -29,8 +28,11 @@ func NewAggregateBondedTransactionV2(network network.Network, maxFee decimal.UIn
 		signer:                          signer,
 		isEmbedded:                      false,
 	}
+
+	baseTx.SetBaseSize(40, false)
+
 	return AggregateBondedTransactionV2{
-		BaseTransaction:                     tx,
+		BaseTransaction:                     baseTx,
 		payloadSize:                         decimal.NewUInt32(0),
 		aggregateTransactionHeaderReserved1: decimal.NewUInt32(0),
 	}
@@ -41,6 +43,8 @@ func (tx *AggregateBondedTransactionV2) Transactions(transactions []Transaction)
 		return tx
 	}
 
+	tx.payloadSize = decimal.NewUInt32(0)
+
 	for _, innerTx := range transactions {
 		tx.payloadSize.Add(innerTx.Size())
 	}
@@ -50,7 +54,8 @@ func (tx *AggregateBondedTransactionV2) Transactions(transactions []Transaction)
 		return tx
 	}
 
-	tx.transactionHash = hash
+	tx.size.Add(tx.payloadSize.Value())
+	tx.aggregateTxMerkleRoot = hash
 	tx.transactions = transactions
 
 	return tx
@@ -64,7 +69,7 @@ func (tx AggregateBondedTransactionV2) Serialize() ([]byte, error) {
 	}
 
 	// serialize attrs
-	serializeData = append(serializeData, tx.transactionHash[:]...)
+	serializeData = append(serializeData, tx.aggregateTxMerkleRoot[:]...)
 	serializeData = append(serializeData, tx.payloadSize.Bytes()...)
 	serializeData = append(serializeData, tx.aggregateTransactionHeaderReserved1.Bytes()...)
 
@@ -81,25 +86,30 @@ func (tx AggregateBondedTransactionV2) Serialize() ([]byte, error) {
 }
 
 func (tx AggregateBondedTransactionV2) MerkleRootHash() Hash {
-	return tx.transactionHash
+	return tx.aggregateTxMerkleRoot
 }
 
 func (tx AggregateBondedTransactionV2) Hash(generationHashSeed []byte) Hash {
 	hasher := sha3.New256()
 
+	// TODO :: need error check
+	payload, _ := tx.Payload()
+
 	hasher.Write(tx.signature[:])    // signature
 	hasher.Write(tx.signer[:])       // signer public key
 	hasher.Write(generationHashSeed) // generationhashssed
-
-	txSerializedBytes, err := tx.Serialize()
-	if err != nil {
-		// TODO :: err check
-		return Hash{}
-	}
-
-	hasher.Write(txSerializedBytes[108:160]) // tx serialize (108~160)
+	hasher.Write(payload)            // tx payload
 
 	hashedBytes := hasher.Sum(nil)
 
 	return Hash(hashedBytes)
+}
+
+func (tx AggregateBondedTransactionV2) Payload() (Payload, error) {
+	serializedBytes, err := tx.Serialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return Payload(serializedBytes[TransactionHeaderSize:(TransactionHeaderSize + AggregateHashedSize)]), nil
 }

@@ -23,9 +23,8 @@ type TransferTransactionV1 struct {
 }
 
 func NewTransferTransactionV1(network network.Network, maxFee decimal.UInt64, deadline decimal.UInt64, signer account.PublicKey, isEmbedded bool) TransferTransactionV1 {
-	tx := BaseTransaction{
-		size:                            decimal.NewUInt32(32),
-		version:                         decimal.NewUInt8(1),
+	baseTx := BaseTransaction{
+		version:                         decimal.NewUInt8(0x01),
 		network:                         network,
 		txType:                          decimal.NewUInt16(0x4154),
 		fee:                             maxFee,
@@ -36,8 +35,10 @@ func NewTransferTransactionV1(network network.Network, maxFee decimal.UInt64, de
 		isEmbedded:                      isEmbedded,
 	}
 
+	baseTx.SetBaseSize(32, isEmbedded)
+
 	return TransferTransactionV1{
-		BaseTransaction:                   tx,
+		BaseTransaction:                   baseTx,
 		transferTransactionBodyReserved_1: decimal.NewUInt8(0),
 		transferTransactionBodyReserved_2: decimal.NewUInt32(0),
 	}
@@ -105,4 +106,13 @@ func (tx TransferTransactionV1) Serialize() ([]byte, error) {
 	serializeData = append(serializeData, tx.message.Bytes()...)
 
 	return serializeData, nil
+}
+
+func (tx TransferTransactionV1) Payload() (Payload, error) {
+	serializedBytes, err := tx.Serialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return Payload(serializedBytes[TransactionHeaderSize:]), nil
 }

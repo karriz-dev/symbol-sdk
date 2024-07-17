@@ -44,16 +44,16 @@ func (transactionFactory *TransactionFactory) Deadline(deadline time.Duration) *
 	return transactionFactory
 }
 
-func (transactionFactory TransactionFactory) Sign(tx tx.Transaction, signer account.PrivateKey) (signature.Signature, error) {
-	baseTxSerializeBytes, err := tx.Serialize()
+func (transactionFactory TransactionFactory) Sign(transaction tx.Transaction, signer account.PrivateKey) (signature.Signature, error) {
+	payload, err := transaction.Payload()
 	if err != nil {
 		return signature.Signature{}, err
 	}
 
-	appendedData := append(transactionFactory.network.GenerationHashSeed, baseTxSerializeBytes[108:]...)
+	payloadBytes := append(transactionFactory.network.GenerationHashSeed, payload...)
 
 	edPrivateKey := ed25519.NewKeyFromSeed(signer[:])
-	sign, err := edPrivateKey.Sign(nil, appendedData,
+	sign, err := edPrivateKey.Sign(nil, payloadBytes,
 		&ed25519.Options{},
 	)
 	if err != nil {
@@ -63,17 +63,20 @@ func (transactionFactory TransactionFactory) Sign(tx tx.Transaction, signer acco
 	return signature.Signature(sign), nil
 }
 
-func (transactionFactory TransactionFactory) Verify(payload []byte, signature []byte, signer account.PublicKey) error {
-	appendedData := append(transactionFactory.network.GenerationHashSeed, payload[108:]...)
+func (transactionFactory TransactionFactory) Verify(transaction tx.Transaction, signature []byte, signer account.PublicKey) error {
+	payload, err := transaction.Payload()
+	if err != nil {
+		return err
+	}
 
-	err := ed25519.VerifyWithOptions(
+	payloadBytes := append(transactionFactory.network.GenerationHashSeed, payload...)
+
+	return ed25519.VerifyWithOptions(
 		ed25519.PublicKey(signer[:]),
-		appendedData,
+		payloadBytes,
 		signature,
 		&ed25519.Options{},
 	)
-
-	return err
 }
 
 func (transactionFactory TransactionFactory) TransferTransactionV1(isEmbedded bool) tx.TransferTransactionV1 {

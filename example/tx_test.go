@@ -47,10 +47,7 @@ func TestTransactionSignAndVerify(t *testing.T) {
 	signature, err := facade.TransactionFactory.Sign(transferTx, example.AliceAccount.PrivateKey)
 	require.NoError(t, err)
 
-	transactionBytes, err := transferTx.Serialize()
-	require.NoError(t, err)
-
-	verify := facade.TransactionFactory.Verify(transactionBytes, signature[:], example.AliceAccount.PublicKey)
+	verify := facade.TransactionFactory.Verify(transferTx, signature[:], example.AliceAccount.PublicKey)
 	require.NoError(t, verify)
 
 	transferTx.AttachSignature(signature)
@@ -91,10 +88,7 @@ func TestTransactionNetworkAnnounce(t *testing.T) {
 	signature, err := facade.TransactionFactory.Sign(transferTx, example.AliceAccount.PrivateKey)
 	require.NoError(t, err)
 
-	transactionBytes, err := transferTx.Serialize()
-	require.NoError(t, err)
-
-	verify := facade.TransactionFactory.Verify(transactionBytes, signature[:], example.AliceAccount.PublicKey)
+	verify := facade.TransactionFactory.Verify(transferTx, signature[:], example.AliceAccount.PublicKey)
 	require.NoError(t, verify)
 
 	transferTx.AttachSignature(signature)
@@ -146,7 +140,7 @@ func TestHashLockTx(t *testing.T) {
 		Signer(example.ServiceProviderAccount.PublicKey).
 		TransferTransactionV1(true)
 
-	tx1.Recipient(example.ServiceProviderAccount.Address)
+	tx1.Recipient(example.ServiceProviderAccount.Address).Message("My First aggregate bonded tx - transact By Go SDK")
 
 	tx2 := facade.TransactionFactory.
 		Signer(example.AliceAccount.PublicKey).
@@ -223,4 +217,132 @@ func TestHashLockTx(t *testing.T) {
 
 	m, _ := json.MarshalIndent(result, "", "\t")
 	t.Log(string(m))
+}
+
+func TestAggregateBondedTxAnnounce(t *testing.T) {
+	// NOTE :: if you change address.txt on yours edit this expected
+	require.Equal(t, "TDWNFH2JA5FG3L5LTGYIS5TB475TENZVYJ4CQCI", example.AliceAccount.EncodedAddress())
+	require.Equal(t, "TBROSRKD5LONZYOP4II7JJTLS5IY6IOOG34DZHI", example.BobAccount.EncodedAddress())
+	require.Equal(t, "TBLWGZ5W6VYS7BAE3O6VMN5VIW4FTC3BCDEYDMA", example.ServiceProviderAccount.EncodedAddress())
+
+	facade := symbolsdk.NewSymbolFacade("testnet")
+
+	// 1. create embeddedTxs
+	tx1 := facade.TransactionFactory.
+		Signer(example.ServiceProviderAccount.PublicKey).
+		TransferTransactionV1(true)
+
+	tx1.Recipient(example.ServiceProviderAccount.Address)
+
+	tx2 := facade.TransactionFactory.
+		Signer(example.AliceAccount.PublicKey).
+		TransferTransactionV1(true)
+
+	tx2.Recipient(example.BobAccount.Address).
+		Mosaics([]mosaic.Mosaic{
+			{
+				MosaicId: decimal.NewUInt64(0x72C0212E67A08BCE),
+				Amount:   decimal.NewUInt64(1_000000),
+			},
+		})
+
+	innerTxList := []tx.Transaction{tx1, tx1, tx1}
+
+	// 2. create aggregate bonded tx & get tx hash
+	aggregateTx := facade.TransactionFactory.
+		MaxFee(1_000000).
+		Deadline(time.Minute * 5).
+		Signer(example.ServiceProviderAccount.PublicKey).
+		AggregateBondedTransactionV2()
+
+	aggregateTx.Transactions(innerTxList)
+
+	txHash := aggregateTx.Hash(facade.Network.GenerationHashSeed)
+
+	aggregateTxSign, err := facade.TransactionFactory.Sign(aggregateTx, example.ServiceProviderAccount.PrivateKey)
+	require.NoError(t, err)
+
+	aggregateTx.AttachSignature(aggregateTxSign)
+
+	t.Log("txHash: ", txHash)
+
+	aggregateBondedTxSerializedBytes, err := aggregateTx.Serialize()
+	require.NoError(t, err)
+
+	payload := util.BytesToJSONPayload(aggregateBondedTxSerializedBytes)
+
+	t.Log("aggregateBondedTxSerializedBytes:", payload)
+
+	// 3. create hashlock tx & announce to network
+	hashlockTx := facade.TransactionFactory.
+		MaxFee(1_000000).
+		Deadline(time.Minute * 5).
+		Signer(example.ServiceProviderAccount.PublicKey).
+		HashLockTransactionV1(false)
+
+	hashlockTx.
+		Mosaic(mosaic.Mosaic{
+			MosaicId: decimal.NewUInt64(0x72C0212E67A08BCE),
+			Amount:   decimal.NewUInt64(10_000000),
+		}).
+		LockDuration(decimal.NewUInt64(10)).
+		ParentHash(txHash)
+
+	hashlockTxSign, err := facade.TransactionFactory.Sign(hashlockTx, example.ServiceProviderAccount.PrivateKey)
+	require.NoError(t, err)
+
+	hashlockTx.AttachSignature(hashlockTxSign)
+
+	hashlockTxSerializedBytes, err := hashlockTx.Serialize()
+	require.NoError(t, err)
+
+	payload = util.BytesToJSONPayload(hashlockTxSerializedBytes)
+
+	t.Log(payload)
+
+	// symbolRestClient := http.Client{
+	// 	Timeout: time.Second * 3,
+	// }
+
+	// req, err := http.NewRequest(http.MethodPut, example.SymbolTestNetworkUrl+"/transactions", bytes.NewBufferString(payload))
+	// require.NoError(t, err)
+
+	// req.Header.Set("Content-Type", "application/json")
+
+	// response, err := symbolRestClient.Do(req)
+	// require.NoError(t, err)
+
+	// body, err := io.ReadAll(response.Body)
+	// require.NoError(t, err)
+
+	// var result map[string]any
+	// err = json.Unmarshal(body, &result)
+	// require.NoError(t, err)
+
+	// m, _ := json.MarshalIndent(result, "", "\t")
+	// t.Log(string(m))
+
+	// // wait for tx confirm
+	// time.Sleep(time.Second * 30)
+
+	// payload = util.BytesToJSONPayload(aggregateBondedTxSerializedBytes)
+
+	// t.Log(payload)
+
+	// req, err = http.NewRequest(http.MethodPut, example.SymbolTestNetworkUrl+"/transactions/partial", bytes.NewBufferString(payload))
+	// require.NoError(t, err)
+
+	// req.Header.Set("Content-Type", "application/json")
+
+	// response, err = symbolRestClient.Do(req)
+	// require.NoError(t, err)
+
+	// body, err = io.ReadAll(response.Body)
+	// require.NoError(t, err)
+
+	// err = json.Unmarshal(body, &result)
+	// require.NoError(t, err)
+
+	// m, _ = json.MarshalIndent(result, "", "\t")
+	// t.Log(string(m))
 }

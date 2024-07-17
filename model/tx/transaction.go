@@ -7,9 +7,18 @@ import (
 	"github.com/karriz-dev/symbol-sdk/network"
 )
 
+const (
+	BaseTransactionSize     = 48
+	EmbeddedTransactionSize = 128
+
+	TransactionHeaderSize = 108
+	AggregateHashedSize   = 52
+)
+
 type Transaction interface {
 	Serialize() ([]byte, error)
 	Size() uint32
+	Payload() (Payload, error)
 }
 
 type BaseTransaction struct {
@@ -28,7 +37,14 @@ type BaseTransaction struct {
 	deadline            decimal.UInt64    // transaction deadline			(8 bytes)
 
 	isEmbedded bool // check embedded tx
-	hash       Hash // tx hash
+}
+
+func (tx *BaseTransaction) SetBaseSize(innerTxSize uint32, isEmbedded bool) {
+	if isEmbedded {
+		tx.size = decimal.NewUInt32(innerTxSize + 48)
+	} else {
+		tx.size = decimal.NewUInt32(innerTxSize + 128)
+	}
 }
 
 func (tx BaseTransaction) Serialize() ([]byte, error) {
@@ -36,8 +52,6 @@ func (tx BaseTransaction) Serialize() ([]byte, error) {
 	var serializeData []byte
 
 	if tx.isEmbedded {
-		tx.size.Add(48) // embedded tx header size: 48 bytes
-
 		serializeData = append(tx.size.Bytes(), tx.verifiableEntityHeaderReserved1.Bytes()...)
 		serializeData = append(serializeData, tx.signer[:]...)
 		serializeData = append(serializeData, tx.entityBodyReserved1.Bytes()...)
@@ -45,8 +59,6 @@ func (tx BaseTransaction) Serialize() ([]byte, error) {
 		serializeData = append(serializeData, byte(tx.network.Type))
 		serializeData = append(serializeData, tx.txType.Bytes()...)
 	} else {
-		tx.size.Add(128) // base tx header size: 128 bytes
-
 		serializeData = append(tx.size.Bytes(), tx.verifiableEntityHeaderReserved1.Bytes()...)
 		serializeData = append(serializeData, tx.signature[:]...)
 		serializeData = append(serializeData, tx.signer[:]...)

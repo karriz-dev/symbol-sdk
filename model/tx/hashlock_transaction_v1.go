@@ -1,8 +1,6 @@
 package tx
 
 import (
-	"fmt"
-
 	"github.com/karriz-dev/symbol-sdk/model/account"
 	"github.com/karriz-dev/symbol-sdk/model/decimal"
 	"github.com/karriz-dev/symbol-sdk/model/mosaic"
@@ -19,7 +17,6 @@ type HashLockTransactionV1 struct {
 
 func NewHashLockTransactionV1(network network.Network, maxFee decimal.UInt64, deadline decimal.UInt64, signer account.PublicKey, isEmbedded bool) HashLockTransactionV1 {
 	baseTx := BaseTransaction{
-		size:                            decimal.NewUInt32(56),
 		version:                         decimal.NewUInt8(0x01),
 		network:                         network,
 		txType:                          decimal.NewUInt16(0x4148),
@@ -30,9 +27,12 @@ func NewHashLockTransactionV1(network network.Network, maxFee decimal.UInt64, de
 		signer:                          signer,
 		isEmbedded:                      isEmbedded,
 	}
+
+	baseTx.SetBaseSize(56, isEmbedded)
+
 	return HashLockTransactionV1{
 		BaseTransaction: baseTx,
-	} 
+	}
 }
 
 func (tx *HashLockTransactionV1) Mosaic(mosaic mosaic.Mosaic) *HashLockTransactionV1 {
@@ -65,7 +65,14 @@ func (tx HashLockTransactionV1) Serialize() ([]byte, error) {
 	serializeData = append(serializeData, tx.duration.Bytes()...)
 	serializeData = append(serializeData, tx.hash[:]...)
 
-	fmt.Println(serializeData)
-
 	return serializeData, nil
+}
+
+func (tx HashLockTransactionV1) Payload() (Payload, error) {
+	serializedBytes, err := tx.Serialize()
+	if err != nil {
+		return nil, err
+	}
+
+	return Payload(serializedBytes[TransactionHeaderSize:]), nil
 }
