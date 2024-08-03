@@ -1,6 +1,8 @@
 # Symbol SDK for Go
 Symbol Blockchain Network SDK for Go  
 
+[![Quality gate](http://xym0.kalee.land:10001/api/project_badges/quality_gate?project=karriz-dev_symbol-sdk_322a0165-b934-4a5d-b199-84f5bbd42784&token=sqb_547ac2ec0a0df30ca9e4b15e8067841831119b0c)](http://xym0.kalee.land:10001/dashboard?id=karriz-dev_symbol-sdk_322a0165-b934-4a5d-b199-84f5bbd42784)
+
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/karriz-dev/symbol-sdk)
 ![GitHub Release](https://img.shields.io/github/v/release/karriz-dev/symbol-sdk)
 
